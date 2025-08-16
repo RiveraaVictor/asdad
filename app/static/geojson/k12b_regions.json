@@ -1,0 +1,125 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Gedrosia" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [50, 25], [65, 25], [65, 35], [50, 35], [50, 25] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Siberian" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [80, 50], [120, 50], [120, 65], [80, 65], [80, 50] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Northwest_African" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [-10, 20], [10, 20], [10, 35], [-10, 35], [-10, 20] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Southeast_Asian" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [100, 0], [120, 0], [120, 20], [100, 20], [100, 0] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Atlantic_Med" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [-5, 36], [15, 36], [15, 45], [-5, 45], [-5, 36] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "North_European" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [5, 50], [25, 50], [25, 60], [5, 60], [5, 50] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "South_Asian" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [70, 10], [90, 10], [90, 30], [70, 30], [70, 10] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "East_African" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [30, -10], [50, -10], [50, 10], [30, 10], [30, -10] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Southwest_Asian" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [35, 25], [49, 25], [49, 40], [35, 40], [35, 25] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "East_Asian" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [105, 25], [130, 25], [130, 45], [105, 45], [105, 25] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Caucasus" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [40, 40], [50, 40], [50, 45], [40, 45], [40, 40] ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Sub_Saharan" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [ [-10, -20], [40, -20], [40, 15], [-10, 15], [-10, -20] ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Northern_Europe" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [-10, 70], [30, 70], [30, 50], [-10, 50], [-10, 70] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Southern_Europe" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [-10, 50], [40, 50], [40, 35], [-10, 35], [-10, 50] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Eastern_Europe" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [25, 65], [60, 65], [60, 45], [25, 45], [25, 65] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "West_Asia_Caucasus" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [35, 45], [65, 45], [65, 25], [35, 25], [35, 45] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "South_Asia" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [65, 35], [95, 35], [95, 5], [65, 5], [65, 35] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Siberia_Central_Asia" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [60, 65], [140, 65], [140, 45], [60, 45], [60, 65] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "East_Asia" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [95, 45], [145, 45], [145, 20], [95, 20], [95, 45] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Southeast_Asia" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [95, 20], [140, 20], [140, -10], [95, -10], [95, 20] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "North_Africa" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [-18, 37], [35, 37], [35, 15], [-18, 15], [-18, 37] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Sub_Saharan_Africa" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [-18, 15], [52, 15], [52, -35], [-18, -35], [-18, 15] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Americas" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [-170, 70], [-30, 70], [-30, -55], [-170, -55], [-170, 70] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Oceania" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [110, -10], [180, -10], [180, -50], [110, -50], [110, -10] ] ] }
+    }
+  ]
+}

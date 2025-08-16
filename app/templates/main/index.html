@@ -1,0 +1,909 @@
+{% extends "base.html" %}
+
+{% block title %}{{ site_name }} - Análise de Ancestralidade Genética{% endblock %}
+
+{% block meta_description %}Visualize seus dados de ancestralidade genética com qualquer modelo Admixture em um mapa interativo mundial. Suporte universal para todos os modelos K.{% endblock %}
+
+{% block body_class %}admixture-analysis{% endblock %}
+
+{% block extra_css %}
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<style>
+:root {
+    --primary-color: #2563eb;
+    --secondary-color: #64748b;
+    --success-color: #059669;
+    --warning-color: #d97706;
+    --danger-color: #dc2626;
+    --dark-color: #1e293b;
+    --light-color: #f8fafc;
+    --border-radius: 12px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+    min-height: 60vh;
+}
+
+.upload-area {
+    border: 2px dashed #cbd5e1;
+    border-radius: var(--border-radius);
+    padding: 3rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background: #f1f5f9;
+}
+
+.upload-area.dragover {
+    border-color: var(--primary-color);
+    background: #dbeafe;
+    transform: scale(1.02);
+}
+
+.upload-area.error {
+    border-color: var(--danger-color);
+    background: #fef2f2;
+}
+
+.upload-area.success {
+    border-color: var(--success-color);
+    background: #f0fdf4;
+}
+
+#map {
+    height: 600px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+}
+
+.analysis-panel {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.legend {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 0.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.progress-container {
+    display: none;
+    margin-top: 1rem;
+}
+
+.map-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+}
+
+.map-control-btn {
+    background: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    font-size: 0.875rem;
+}
+
+.map-control-btn:hover {
+    background: #f8fafc;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.text-area {
+    min-height: 150px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+}
+
+.alert {
+    border-radius: var(--border-radius);
+    border: none;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.btn {
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+@media (max-width: 768px) {
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+    
+    #map {
+        height: 400px;
+    }
+    
+    .map-controls {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 1rem;
+    }
+    
+    .map-control-btn {
+        display: inline-block;
+        width: auto;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-4">Análise de Ancestralidade Genética</h1>
+                 <p class="lead mb-4">
+                     Visualize seus dados de ancestralidade com qualquer modelo Admixture em um mapa mundial interativo.
+                     Carregue seus resultados de DNA e explore sua herança genética de forma intuitiva.
+                 </p>
+                 <div class="d-flex justify-content-center gap-3">
+                     <span class="badge bg-light text-dark px-3 py-2">Suporte Universal</span>
+                     <span class="badge bg-light text-dark px-3 py-2">Detecção Automática</span>
+                     <span class="badge bg-light text-dark px-3 py-2">Qualquer Modelo K</span>
+                 </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Upload Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="analysis-panel">
+                    <h3 class="h5 fw-bold mb-3">
+                        <i class="fas fa-upload text-primary me-2"></i>Upload de Arquivo
+                    </h3>
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="fw-bold mb-2">Arraste seu arquivo .txt aqui</h5>
+                        <p class="text-muted mb-3">ou clique para selecionar</p>
+                        <button type="button" class="btn btn-primary" id="selectFileBtn">
+                            <i class="fas fa-folder-open me-2"></i>Selecionar Arquivo
+                        </button>
+                        <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                        <div class="mt-3">
+                            <small class="text-muted">Formatos aceitos: .txt | Tamanho máximo: 5MB</small>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress">
+                            <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted mt-1" id="progressText">Processando...</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 mb-4">
+                <div class="analysis-panel">
+                    <h3 class="h5 fw-bold mb-3">
+                        <i class="fas fa-paste text-primary me-2"></i>Colar Dados
+                    </h3>
+                    <div class="mb-3">
+                        <label for="textInput" class="form-label">Cole seus resultados Admixture aqui:</label>
+                        <textarea class="form-control text-area" id="textInput" placeholder="Cole o conteúdo do seu arquivo de resultados Admixture aqui...\n\nExemplo (formato: População Comp1 Comp2 Comp3...):\nEuropean 0.234 0.156 0.089 0.521\nEast_Asian 0.345 0.234 0.123 0.298\nAfrican 0.123 0.456 0.789 0.012\n\nSuporta qualquer número de componentes (K2, K3, K12, K36, etc.)"></textarea>
+                    </div>
+                    <button type="button" class="btn btn-success w-100" id="processTextBtn">
+                        <i class="fas fa-play me-2"></i>Processar Dados
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alerts -->
+        <div id="alertContainer"></div>
+        
+        <!-- Statistics -->
+        <div id="statsContainer" style="display: none;">
+            <div class="analysis-panel">
+                <h3 class="h5 fw-bold mb-3">
+                    <i class="fas fa-chart-bar text-primary me-2"></i>Estatísticas da Análise
+                </h3>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Stats will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="analysis-panel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="h5 fw-bold mb-0">
+                            <i class="fas fa-globe text-primary me-2"></i>Mapa de Ancestralidade
+                        </h3>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary" id="exportBtn" style="display: none;">
+                                <i class="fas fa-download me-1"></i>Exportar
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" id="resetViewBtn" style="display: none;">
+                                <i class="fas fa-home me-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="position-relative">
+                        <div id="map"></div>
+                        
+                        <!-- Map Controls -->
+                        <div class="map-controls" id="mapControls" style="display: none;">
+                            <button class="map-control-btn" id="toggleClustersBtn">
+                                <i class="fas fa-layer-group me-1"></i>Clusters
+                            </button>
+                            <button class="map-control-btn" id="fullscreenBtn">
+                                <i class="fas fa-expand me-1"></i>Tela Cheia
+                            </button>
+                            <select class="map-control-btn" id="styleSelect">
+                                <option value="streets-v12">Streets</option>
+                                <option value="satellite-v9">Satellite</option>
+                                <option value="light-v11">Light</option>
+                                <option value="dark-v11">Dark</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Legend -->
+                        <div class="position-absolute" style="bottom: 10px; left: 10px; max-width: 300px; display: none;" id="legendContainer">
+                            <div class="legend">
+                                <h6 class="fw-bold mb-2">Legenda</h6>
+                                <div id="legendContent">
+                                    <!-- Legend items will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Instructions Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="analysis-panel">
+                    <h3 class="h5 fw-bold mb-3">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Como Usar
+                    </h3>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                                    <span class="fw-bold">1</span>
+                                </div>
+                                <h6 class="fw-bold">Carregue seus dados</h6>
+                                <p class="text-muted small">Faça upload do arquivo .txt ou cole o conteúdo diretamente</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                                    <span class="fw-bold">2</span>
+                                </div>
+                                <h6 class="fw-bold">Visualize no mapa</h6>
+                                <p class="text-muted small">Explore sua ancestralidade no mapa mundial interativo</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                                    <span class="fw-bold">3</span>
+                                </div>
+                                <h6 class="fw-bold">Exporte resultados</h6>
+                                <p class="text-muted small">Salve seus resultados em PDF, PNG ou SVG</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script>
+// Global variables
+let map;
+let admixtureData = null;
+let currentModel = null;
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiZ2FicmllbGFsbWVpZGFzYW50b3NtZWxvIiwiYSI6ImNtZHI0aHgycDBkbnMybXEzcTFzMjcxZTQifQ.wl33qoKDu0ARCryA6gOsqg'; // Replace with your Mapbox token
+
+// Base color palette for admixture components
+ const baseColors = [
+     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD',
+     '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA',
+     '#F1948A', '#85C1E9', '#F4D03F', '#AED6F1', '#A9DFBF', '#F5B7B1',
+     '#D7BDE2', '#A3E4D7', '#FAD7A0', '#D5A6BD', '#A9CCE3', '#ABEBC6',
+     '#F9E79F', '#D2B4DE', '#7FB3D3', '#52BE80', '#F8D7DA', '#B8860B',
+     '#20B2AA', '#9370DB', '#3CB371', '#F0E68C', '#BA55D3', '#40E0D0',
+     '#FF8C94', '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF',
+     '#C9C9FF', '#FFB3FF', '#FF9999', '#99CCFF', '#99FF99', '#FFCC99'
+ ];
+ 
+ // Function to generate colors for any number of components
+ function generateColorPalette(componentCount) {
+     const colors = [];
+     for (let i = 0; i < componentCount; i++) {
+         if (i < baseColors.length) {
+             colors.push(baseColors[i]);
+         } else {
+             // Generate additional colors using HSL
+             const hue = (i * 137.508) % 360; // Golden angle approximation
+             const saturation = 65 + (i % 3) * 10; // Vary saturation
+             const lightness = 55 + (i % 4) * 8; // Vary lightness
+             colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+         }
+     }
+     return colors;
+ }
+
+// Population coordinates (simplified)
+const populationCoordinates = {
+    'European': [-10, 50],
+    'East_Asian': [110, 35],
+    'African': [20, 0],
+    'Native_American': [-100, 40],
+    'Oceanian': [140, -25],
+    'Middle_Eastern': [45, 30],
+    'South_Asian': [75, 20],
+    'Central_Asian': [65, 45],
+    'Siberian': [100, 60],
+    'North_African': [10, 25]
+};
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMap();
+    setupEventListeners();
+});
+
+function initializeMap() {
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    
+    map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [0, 20],
+        zoom: 2,
+        projection: 'globe'
+    });
+    
+    map.on('load', function() {
+        // Add atmosphere for globe view
+        map.setFog({
+            'range': [0.8, 8],
+            'color': '#ffffff',
+            'horizon-blend': 0.5
+        });
+    });
+}
+
+function setupEventListeners() {
+    // File upload events
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const processTextBtn = document.getElementById('processTextBtn');
+    const textInput = document.getElementById('textInput');
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', handleDragOver);
+    uploadArea.addEventListener('dragleave', handleDragLeave);
+    uploadArea.addEventListener('drop', handleDrop);
+    
+    // File selection
+    selectFileBtn.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Text processing
+    processTextBtn.addEventListener('click', () => {
+        const text = textInput.value.trim();
+        if (text) {
+            processAdmixtureData(text);
+        } else {
+            showAlert('Por favor, cole os dados antes de processar.', 'warning');
+        }
+    });
+    
+    // Map controls
+    document.getElementById('resetViewBtn').addEventListener('click', resetMapView);
+    document.getElementById('toggleClustersBtn').addEventListener('click', toggleClusters);
+    document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+    document.getElementById('styleSelect').addEventListener('change', changeMapStyle);
+    document.getElementById('exportBtn').addEventListener('click', exportMap);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('dragover');
+}
+
+function handleDragLeave(e) {
+    e.currentTarget.classList.remove('dragover');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+}
+
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+        handleFile(file);
+    }
+}
+
+function handleFile(file) {
+    if (!file.name.endsWith('.txt')) {
+        showAlert('Por favor, selecione um arquivo .txt', 'error');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+        showAlert('Arquivo muito grande. Tamanho máximo: 5MB', 'error');
+        return;
+    }
+    
+    showProgress(true);
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        processAdmixtureData(content);
+    };
+    
+    reader.onerror = function() {
+        showAlert('Erro ao ler o arquivo', 'error');
+        showProgress(false);
+    };
+    
+    reader.readAsText(file);
+}
+
+function processAdmixtureData(content) {
+    try {
+        showProgress(true, 'Processando dados...');
+        
+        // Parse the admixture data
+        const lines = content.trim().split('\n').filter(line => line.trim());
+        const data = [];
+        
+        for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                const population = parts[0];
+                const values = parts.slice(1).map(v => parseFloat(v)).filter(v => !isNaN(v));
+                
+                if (values.length > 0) {
+                    data.push({ population, values });
+                }
+            }
+        }
+        
+        if (data.length === 0) {
+            throw new Error('Nenhum dado válido encontrado');
+        }
+        
+        // Detect model type
+         const componentCount = Math.max(...data.map(d => d.values.length));
+         const detectedModel = `K${componentCount}`;
+        
+        admixtureData = data;
+        currentModel = detectedModel;
+        
+        showProgress(false);
+        showAlert(`Dados processados com sucesso! Modelo detectado: ${detectedModel}`, 'success');
+        
+        // Update statistics
+        updateStatistics();
+        
+        // Visualize on map
+        visualizeOnMap();
+        
+        // Show map controls
+        document.getElementById('mapControls').style.display = 'block';
+        document.getElementById('resetViewBtn').style.display = 'inline-block';
+        document.getElementById('exportBtn').style.display = 'inline-block';
+        
+    } catch (error) {
+        showProgress(false);
+        showAlert(`Erro ao processar dados: ${error.message}`, 'error');
+    }
+}
+
+function visualizeOnMap() {
+    if (!admixtureData || !map) return;
+    
+    // Clear existing layers
+    clearMapLayers();
+    
+    // Create GeoJSON features
+     const features = [];
+     const componentCount = Math.max(...admixtureData.map(d => d.values.length));
+     const colors = generateColorPalette(componentCount);
+    
+    admixtureData.forEach((item, index) => {
+        const coords = populationCoordinates[item.population] || [Math.random() * 360 - 180, Math.random() * 180 - 90];
+        
+        // Find dominant component
+        const maxValue = Math.max(...item.values);
+        const maxIndex = item.values.indexOf(maxValue);
+        const color = colors[maxIndex % colors.length];
+        
+        features.push({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: coords
+            },
+            properties: {
+                population: item.population,
+                values: item.values,
+                dominantComponent: maxIndex,
+                dominantValue: maxValue,
+                color: color
+            }
+        });
+    });
+    
+    // Add source
+    map.addSource('admixture-data', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: features
+        },
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50
+    });
+    
+    // Add cluster layer
+    map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'admixture-data',
+        filter: ['has', 'point_count'],
+        paint: {
+            'circle-color': [
+                'step',
+                ['get', 'point_count'],
+                '#51bbd6',
+                100, '#f1f075',
+                750, '#f28cb1'
+            ],
+            'circle-radius': [
+                'step',
+                ['get', 'point_count'],
+                20, 100, 30, 750, 40
+            ]
+        }
+    });
+    
+    // Add cluster count
+    map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'admixture-data',
+        filter: ['has', 'point_count'],
+        layout: {
+            'text-field': '{point_count_abbreviated}',
+            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+            'text-size': 12
+        }
+    });
+    
+    // Add individual points
+    map.addLayer({
+        id: 'unclustered-point',
+        type: 'circle',
+        source: 'admixture-data',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+            'circle-color': ['get', 'color'],
+            'circle-radius': 8,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff'
+        }
+    });
+    
+    // Add click events
+    map.on('click', 'clusters', function(e) {
+        const features = map.queryRenderedFeatures(e.point, {
+            layers: ['clusters']
+        });
+        const clusterId = features[0].properties.cluster_id;
+        map.getSource('admixture-data').getClusterExpansionZoom(
+            clusterId,
+            function(err, zoom) {
+                if (err) return;
+                map.easeTo({
+                    center: features[0].geometry.coordinates,
+                    zoom: zoom
+                });
+            }
+        );
+    });
+    
+    map.on('click', 'unclustered-point', function(e) {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const properties = e.features[0].properties;
+        
+        // Create popup content
+        const values = JSON.parse(properties.values);
+        let popupContent = `<h6>${properties.population}</h6>`;
+        popupContent += `<p><strong>Componente dominante:</strong> ${properties.dominantComponent + 1}</p>`;
+        popupContent += `<p><strong>Valor:</strong> ${(properties.dominantValue * 100).toFixed(2)}%</p>`;
+        
+        new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(popupContent)
+            .addTo(map);
+    });
+    
+    // Update legend
+    updateLegend();
+}
+
+function updateLegend() {
+    const legendContainer = document.getElementById('legendContainer');
+    const legendContent = document.getElementById('legendContent');
+    
+    if (!admixtureData) {
+        legendContainer.style.display = 'none';
+        return;
+    }
+    
+    const componentCount = Math.max(...admixtureData.map(d => d.values.length));
+     const colors = generateColorPalette(componentCount);
+    
+    let legendHTML = '';
+    for (let i = 0; i < Math.min(componentCount, colors.length); i++) {
+        legendHTML += `
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: ${colors[i]}"></div>
+                <span>Componente ${i + 1}</span>
+            </div>
+        `;
+    }
+    
+    legendContent.innerHTML = legendHTML;
+    legendContainer.style.display = 'block';
+}
+
+function updateStatistics() {
+    if (!admixtureData) return;
+    
+    const statsContainer = document.getElementById('statsContainer');
+    const statsGrid = document.getElementById('statsGrid');
+    
+    const totalPopulations = admixtureData.length;
+    const componentCount = Math.max(...admixtureData.map(d => d.values.length));
+    const avgDiversity = admixtureData.reduce((sum, item) => {
+        const diversity = 1 - item.values.reduce((s, v) => s + v * v, 0);
+        return sum + diversity;
+    }, 0) / totalPopulations;
+    
+    const stats = [
+        { label: 'Populações', value: totalPopulations },
+        { label: 'Componentes', value: componentCount },
+        { label: 'Modelo', value: currentModel },
+        { label: 'Diversidade Média', value: (avgDiversity * 100).toFixed(1) + '%' }
+    ];
+    
+    let statsHTML = '';
+    stats.forEach(stat => {
+        statsHTML += `
+            <div class="stat-card">
+                <div class="stat-value">${stat.value}</div>
+                <div class="stat-label">${stat.label}</div>
+            </div>
+        `;
+    });
+    
+    statsGrid.innerHTML = statsHTML;
+    statsContainer.style.display = 'block';
+}
+
+function clearMapLayers() {
+    const layersToRemove = ['clusters', 'cluster-count', 'unclustered-point'];
+    
+    layersToRemove.forEach(layerId => {
+        if (map.getLayer(layerId)) {
+            map.removeLayer(layerId);
+        }
+    });
+    
+    if (map.getSource('admixture-data')) {
+        map.removeSource('admixture-data');
+    }
+}
+
+function resetMapView() {
+    map.easeTo({
+        center: [0, 20],
+        zoom: 2
+    });
+}
+
+function toggleClusters() {
+    const clustersVisible = map.getLayoutProperty('clusters', 'visibility') !== 'none';
+    const visibility = clustersVisible ? 'none' : 'visible';
+    
+    map.setLayoutProperty('clusters', 'visibility', visibility);
+    map.setLayoutProperty('cluster-count', 'visibility', visibility);
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.getElementById('map').requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+function changeMapStyle() {
+    const style = document.getElementById('styleSelect').value;
+    map.setStyle(`mapbox://styles/mapbox/${style}`);
+    
+    map.once('styledata', function() {
+        if (admixtureData) {
+            visualizeOnMap();
+        }
+    });
+}
+
+function exportMap() {
+    // This would implement export functionality
+    // For now, just show a message
+    showAlert('Funcionalidade de exportação será implementada em breve!', 'info');
+}
+
+function showProgress(show, text = 'Processando...') {
+    const container = document.getElementById('progressContainer');
+    const progressText = document.getElementById('progressText');
+    
+    if (show) {
+        progressText.textContent = text;
+        container.style.display = 'block';
+        
+        // Simulate progress
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 30;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+            }
+            document.getElementById('progressBar').style.width = progress + '%';
+        }, 200);
+    } else {
+        container.style.display = 'none';
+        document.getElementById('progressBar').style.width = '0%';
+    }
+}
+
+function showAlert(message, type = 'info') {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
+    
+    const alertHTML = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertContainer.innerHTML = alertHTML;
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = alertContainer.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
