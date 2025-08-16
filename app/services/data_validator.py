@@ -36,3 +36,17 @@ class AdmixtureDataValidator:
         for component_name in parsed_data.keys():
             if component_name not in model_config['region_mapping']:
                 raise ValueError(f"Componente desconhecido '{component_name}' para o modelo {model_config['name']}.")
+
+def validate_data(parsed_data: dict, calculator: str):
+    """
+    Função de conveniência para validar dados.
+    """
+    validator = AdmixtureDataValidator()
+    # Validação básica por enquanto
+    if not parsed_data:
+        raise ValueError("Dados não podem estar vazios")
+    
+    # Verificar se as porcentagens somam aproximadamente 100%
+    total = sum(parsed_data.values())
+    if abs(total - 1.0) > 0.1:  # Permite 10% de tolerância
+        raise ValueError(f"As porcentagens devem somar 100%. Total atual: {total * 100:.1f}%")

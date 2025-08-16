@@ -75,11 +75,13 @@ def create_app(config_name=None):
     from app.routes.auth import auth_bp
     from app.routes.api import api_bp
     from app.routes.admin import admin_bp
+    from app.routes.admixture import admixture_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(admixture_bp, url_prefix='/admixture')
     
     # Error handlers
     @app.errorhandler(404)

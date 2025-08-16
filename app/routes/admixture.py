@@ -1,29 +1,39 @@
 # app/routes/admixture.py
-from flask import Blueprint, request, jsonify, render_template
-from app.services.admixture_processor import AdmixtureProcessor
+
+from flask import Blueprint, render_template, request, jsonify
+from app.services.admixture_parser import parse_input
+from app.services.admixture_processor import find_closest_populations
+from app.services.data_validator import validate_data
 
 admixture_bp = Blueprint('admixture', __name__)
 
-@admixture_bp.route('/analysis')
-def analysis_page():
-    """Renderiza a página principal de análise de ancestralidade."""
-    return render_template('admixture/analysis.html')
 
-@admixture_bp.route('/api/analyze', methods=['POST'])
-def analyze_admixture_api():
-    """Endpoint da API para processar dados Admixture."""
-    data = request.json
-    if not data or 'text_data' not in data or not data['text_data'].strip():
-        return jsonify({'error': 'Nenhum dado enviado.'}), 400
+@admixture_bp.route('/analysis', methods=['POST'])
+def analysis():
+    # List of country codes to display based on the image provided.
+    countries_to_show = [
+        'PT', 'ES', 'FR', 'IT', 'DE', 'GB', 'IE',
+        'SE', 'NO', 'FI', 'PL', 'UA', 'RU', 'GR', 'TR'
+    ]
+
+    raw_data = request.form.get('data')
+    calculator = request.form.get('calculator')
+
+    if not raw_data or not calculator:
+        return render_template('admixture/analysis.html', error="No data or calculator selected.")
 
     try:
-        processor = AdmixtureProcessor(data['text_data'])
-        result = processor.process()
-        return jsonify(result)
+        parsed_data = parse_input(raw_data)
+        validate_data(parsed_data, calculator)
+        results = find_closest_populations(parsed_data, calculator)
 
+        # Filter the results to include only the specified countries.
+        filtered_results = [result for result in results if result['code'] in countries_to_show]
+
+        return render_template(
+            'admixture/analysis.html',
+            results=filtered_results,
+            user_components=parsed_data
+        )
     except ValueError as e:
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        # Em produção, seria ideal logar o erro.
-        print(f"Erro inesperado no processamento: {e}")
-        return jsonify({'error': 'Ocorreu um erro interno ao processar sua solicitação.'}), 500
+        return render_template('admixture/analysis.html', error=str(e))

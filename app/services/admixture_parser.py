@@ -36,3 +36,10 @@ class AdmixtureParser:
                 parsed_data[component_name] = percentage_value
 
         return parsed_data
+
+def parse_input(raw_data: str) -> dict:
+    """
+    Função de conveniência para analisar dados de entrada.
+    """
+    parser = AdmixtureParser()
+    return parser.parse(raw_data)

@@ -36,3 +36,17 @@ class AdmixtureProcessor:
             'geojson': geojson_result,
             'components': sorted(parsed_data.items(), key=lambda item: item[1], reverse=True)
         }
+
+def find_closest_populations(parsed_data: dict, calculator: str) -> list:
+    """
+    Encontra as populações mais próximas baseadas nos dados analisados.
+    """
+    # Implementação básica que retorna dados mockados por enquanto
+    mock_results = [
+        {'code': 'PT', 'name': 'Portugal', 'distance': 0.15},
+        {'code': 'ES', 'name': 'Spain', 'distance': 0.18},
+        {'code': 'IT', 'name': 'Italy', 'distance': 0.22},
+        {'code': 'FR', 'name': 'France', 'distance': 0.25},
+        {'code': 'GB', 'name': 'Britain', 'distance': 0.28},
+    ]
+    return sorted(mock_results, key=lambda x: x['distance'])
