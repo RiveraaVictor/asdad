@@ -5,7 +5,7 @@ Routes principais da aplicação
 """
 
 import os
-from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify, send_file
 from flask_login import login_required, current_user
 from app.models.post import Post
 from app.models.user import User
@@ -212,6 +212,7 @@ def health_check():
         'app_name': current_app.config.get('APP_NAME', 'Flask App'),
         'version': os.getenv('APP_VERSION', '1.0.0')
     })
+
 
 # Context processor para variáveis globais
 @main_bp.app_context_processor

@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(python -m pip:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(flask init-db:*)",
+      "Bash(mkdir:*)",
+      "Bash(del \"C:\\Users\\victo\\OneDrive\\Área de Trabalho\\Dna\\test_debug.py\")",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

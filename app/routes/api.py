@@ -407,6 +407,31 @@ def api_stats():
     
     return success_response(stats)
 
+# Admixture Analysis Endpoint
+@api_bp.route('/analyze', methods=['POST'])
+def api_analyze():
+    """Análise de dados Admixture"""
+    validation_error = validate_json_data(['text_data'])
+    if validation_error:
+        return validation_error
+    
+    data = request.get_json()
+    text_data = data['text_data']
+    
+    try:
+        from app.services.admixture_processor import AdmixtureProcessor
+        
+        processor = AdmixtureProcessor(text_data)
+        result = processor.process()
+        
+        return success_response(result, "Análise concluída com sucesso")
+        
+    except ValueError as e:
+        return error_response(f"Erro ao processar dados: {str(e)}", 400)
+    except Exception as e:
+        current_app.logger.error(f"Erro na análise: {str(e)}")
+        return error_response("Erro interno no processamento", 500)
+
 # Error Handlers
 @api_bp.errorhandler(404)
 def api_not_found(error):

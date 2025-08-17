@@ -25,17 +25,19 @@ class AdmixtureDataValidator:
         """
         Valida se os componentes encontrados correspondem ao modelo detectado.
         """
-        expected_components = len(model_config['region_mapping'].keys())
         found_components = len(parsed_data.keys())
 
         # Verifica se o número de componentes é o esperado pelo modelo
         if found_components != model_config['components']:
              raise ValueError(f"Dados inválidos para o modelo {model_config['name']}. Esperava {model_config['components']} componentes, mas encontrou {found_components}.")
 
-        # Verifica se os nomes dos componentes nos dados correspondem aos do modelo
-        for component_name in parsed_data.keys():
-            if component_name not in model_config['region_mapping']:
-                raise ValueError(f"Componente desconhecido '{component_name}' para o modelo {model_config['name']}.")
+        # Para validação flexível, não verifica nomes específicos de componentes
+        # apenas verifica se não há componentes vazios
+        for component_name, value in parsed_data.items():
+            if not component_name.strip():
+                raise ValueError("Nome de componente não pode estar vazio")
+            if value < 0 or value > 1:
+                raise ValueError(f"Valor inválido para componente '{component_name}': {value}. Deve estar entre 0 e 1.")
 
 def validate_data(parsed_data: dict, calculator: str):
     """

@@ -38,4 +38,4 @@ click==8.1.7
 rich==13.6.0
 
 # Image Processing
-Pillow==10.0.1
+Pillow>=10.0.1

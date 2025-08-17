@@ -57,7 +57,11 @@ def create_app(config_name=None):
     login_manager.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
-    cors.init_app(app)
+    # Configurar CORS com configurações específicas
+    cors.init_app(app, 
+                  origins=app.config.get('CORS_ORIGINS', ['*']),
+                  allow_headers=['Content-Type', 'Authorization'],
+                  methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
     jwt.init_app(app)
     
     # Configurar Login Manager

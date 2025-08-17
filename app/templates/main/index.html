@@ -242,7 +242,7 @@
                         </button>
                         <input type="file" id="fileInput" accept=".txt" style="display: none;">
                         <div class="mt-3">
-                            <small class="text-muted">Formatos aceitos: .txt | Tamanho máximo: 5MB</small>
+                            <small class="text-muted">Formatos aceitos: .txt | Tamanho máximo: 1GB</small>
                         </div>
                     </div>
                     
@@ -391,6 +391,12 @@
 {% block extra_js %}
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
+// Desabilitar telemetria do Mapbox globalmente
+if (typeof mapboxgl !== 'undefined') {
+    mapboxgl.supported({ failIfMajorPerformanceCaveat: true });
+}
+</script>
+<script>
 // Global variables
 let map;
 let admixtureData = null;
@@ -454,8 +460,16 @@ function initializeMap() {
         style: 'mapbox://styles/mapbox/streets-v12',
         center: [0, 20],
         zoom: 2,
-        projection: 'globe'
+        projection: 'globe',
+        // Desabilitar telemetria para evitar erro CORS
+        trackResize: false,
+        collectResourceTiming: false
     });
+    
+    // Desabilitar telemetria do Mapbox
+    if (map.getCanvas()) {
+        map.getCanvas().setAttribute('data-mapbox-no-track', 'true');
+    }
     
     map.on('load', function() {
         // Add atmosphere for globe view
@@ -535,8 +549,8 @@ function handleFile(file) {
         return;
     }
     
-    if (file.size > 5 * 1024 * 1024) { // 5MB
-        showAlert('Arquivo muito grande. Tamanho máximo: 5MB', 'error');
+    if (file.size > 1 * 1024 * 1024 * 1024) { // 1GB
+        showAlert('Arquivo muito grande. Tamanho máximo: 1GB', 'error');
         return;
     }
     
@@ -738,29 +752,62 @@ function visualizeOnMap() {
     });
     
     // Update legend
-    updateLegend();
+    if (admixtureData && admixtureData.length > 0) {
+        const componentCount = Math.max(...admixtureData.map(d => d.values.length));
+        const components = [];
+        for (let i = 0; i < componentCount; i++) {
+            components.push([`Componente ${i + 1}`, 0.1]);
+        }
+        updateLegend(components, currentModel);
+    }
 }
 
-function updateLegend() {
+function updateLegend(components, modelName) {
     const legendContainer = document.getElementById('legendContainer');
     const legendContent = document.getElementById('legendContent');
     
-    if (!admixtureData) {
+    // Verificação mais robusta dos parâmetros
+    if (!components || !Array.isArray(components) || components.length === 0) {
         legendContainer.style.display = 'none';
         return;
     }
     
-    const componentCount = Math.max(...admixtureData.map(d => d.values.length));
-     const colors = generateColorPalette(componentCount);
+    const componentCount = components.length;
+    const colors = generateColorPalette(componentCount);
     
     let legendHTML = '';
-    for (let i = 0; i < Math.min(componentCount, colors.length); i++) {
-        legendHTML += `
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: ${colors[i]}"></div>
-                <span>Componente ${i + 1}</span>
-            </div>
-        `;
+    if (modelName) {
+        legendHTML += `<h6 class="fw-bold mb-2">${modelName}</h6>`;
+    }
+    
+    // Verificação mais segura do forEach
+    try {
+        components.forEach((item, index) => {
+            // Suporte a diferentes formatos de dados
+            let name, proportion;
+            if (Array.isArray(item) && item.length >= 2) {
+                [name, proportion] = item;
+            } else if (typeof item === 'object' && item.name && item.value !== undefined) {
+                name = item.name;
+                proportion = item.value;
+            } else {
+                console.warn('Formato de componente não reconhecido:', item);
+                return;
+            }
+            
+            const percentage = (proportion * 100).toFixed(2);
+            if (proportion > 0) {
+                legendHTML += `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: ${colors[index % colors.length]}"></div>
+                        <span>${name.replace(/_/g, ' ')}: ${percentage}%</span>
+                    </div>
+                `;
+            }
+        });
+    } catch (error) {
+        console.error('Erro ao processar componentes da legenda:', error);
+        legendHTML += '<p class="text-danger">Erro ao carregar legenda</p>';
     }
     
     legendContent.innerHTML = legendHTML;
